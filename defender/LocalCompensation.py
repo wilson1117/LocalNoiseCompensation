@@ -10,21 +10,21 @@ class LocalCompensation(Defender):
         self.disable_compensation = args.disable_compensation
         self.delta = args.delta
         self.clip = args.clip
+        self.warmup = args.warmup
 
-    def local_gradient_defense(self, grad, model, epoch, batch, prev_info=None):
-        return self.share_gradient_defense(grad, model, prev_info)
-
-    def share_gradient_defense(self, grad, model, prev_info=None):
+    def local_gradient_defense(self, grad, model, round, epoch, batch, prev_info=None):
         grad_len = len(grad)
 
         if prev_info is None:
             prev_info = [None] * grad_len
 
-        # if self.clip:
-        #     for idx, g in enumerate(grad):
-        #         grad[idx] /= max(1, g.norm(2) / self.clip)
+        if self.clip is not None:
+            for idx, g in enumerate(grad):
+                grad[idx] /= max(1, g.norm() / self.clip)
 
-        next_info = None if self.for_attacker or self.disable_compensation else [None] * grad_len
+        non_compensation = self.for_attacker or self.disable_compensation or (round < self.warmup and epoch == 0)
+
+        next_info = None if non_compensation else [None] * grad_len
         
         for (idx, g), prev_noise in zip(enumerate(grad), prev_info):
             noise_mag = (g.detach().abs().max() * self.delta).item()
@@ -38,7 +38,7 @@ class LocalCompensation(Defender):
 
             noise = torch.normal(mean=0, std=noise_mag, size=g.size(), device=g.device)
 
-            if self.for_attacker or self.disable_compensation:
+            if non_compensation:
                 grad[idx] = g + noise
             else:
                 if prev_noise is None:
@@ -52,10 +52,10 @@ class LocalCompensation(Defender):
 
         return grad, next_info
     
-    def attack_simulation(self, grad):
-        if self.enable_clip:
+    def attack_process(self, grad):
+        if self.clip:
             for idx, g in enumerate(grad):
-                norm = g.norm(2).item()
+                norm = g.norm(2).item() / self.clip
                 if norm > 1:
                     grad[idx] /= norm
         

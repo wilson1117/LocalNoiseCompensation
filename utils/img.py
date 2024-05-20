@@ -9,13 +9,14 @@ def to_img(tensor, mean, std, max=255):
     std = torch.tensor(std).view(tensor.shape[-3], 1, 1)
     img = ((tensor.cpu() * std + mean) * max).clamp(0, max)
 
-    if img.shape[-3] <= 3:
-        return img.permute(*range(tensor.dim() - 3), -2, -1, -3)
-
     return img
+
+def swap_channel(img):
+    return img.permute(*range(img.dim() - 3), -2, -1, -3)
 
 def save_img(imgs, filename):
     imgs = imgs.int()
+    plt.clf()
 
     if len(imgs.shape) == 3:
         plt.imshow(imgs)

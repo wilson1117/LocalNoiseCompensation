@@ -40,32 +40,7 @@ if __name__ == '__main__':
     argparser.add_argument('--momentum', type=float, default=0.9, help='momentum')
     argparser.add_argument('--weight-decay', type=float, default=0.01, help='weight decay')
 
-
-    # Defender Config
-    argparser.add_argument('--defender', type=str, default=None, help='defender name')
-    argparser.add_argument('--calc-noise', action='store_true', help='calculate noise')
-
-    # LocalCompensation Config
-    argparser.add_argument('--delta', type=float, default=1, help='max noise scale')
-    argparser.add_argument('--disable-compensation', action='store_true', help='disable compensation')
-    argparser.add_argument('--clip', type=float, default=None, help='clip upperbound')
-
-    # OutPost Config
-    argparser.add_argument('--noise-base', type=float, default=0.8, help='noise base')
-    argparser.add_argument('--phi', type=float, default=40, help='phi')
-    argparser.add_argument('--prune-base', type=float, default=80, help='prune base')
-    argparser.add_argument('--beta', type=float, default=0.1, help='beta')
-
-    # GradDefense Config
-    argparser.add_argument('--gd-clip', action='store_true', help='clip noise')
-    argparser.add_argument('--gd-slices-num', type=int, default=10, help='slices num')
-    argparser.add_argument('--gd-perturb-slices-num', type=int, default=5, help='perturb slices num')
-    argparser.add_argument('--gd-scale', type=float, default=0.01, help='scale')
-
-    # # ANP Config
-    argparser.add_argument('--anp-delta', type=float, default=1e-7)
-    argparser.add_argument('--anp-epsilon', type=float, default=3e-3)
-    
+    defender.get_args(argparser)
 
     # Metric Config
     argparser.add_argument('--criterion', type=str, default=None, help='criterion')
@@ -74,6 +49,7 @@ if __name__ == '__main__':
     # Other Config
     argparser.add_argument('--test-batch', type=int, default=256, help='test batch size')
     argparser.add_argument('--seed', type=int, default=123, help='random seed')
+    argparser.add_argument('--result-root', type=str, default=RESULT_DIR, help='result root directory')
     argparser.add_argument('--log-dir', type=str, default=None, help='log directory')
     argparser.add_argument('--device', type=str, default=None, help='device')
     argparser.add_argument('--save-freq', type=int, default=10, help='save frequency')
@@ -112,9 +88,9 @@ if __name__ == '__main__':
     
     # Create Logger
     if args.log_dir is not None:
-        logger_obj = logger.Logger(os.path.join(RESULT_DIR, args.log_dir))
+        logger_obj = logger.Logger(os.path.join(args.result_root, args.log_dir))
     else:
-        logger_obj = logger.Logger(os.path.join(RESULT_DIR, f"{args.algorithm}_{args.model}_{dataset_config['name']}_{args.defender if args.defender is not None else 'Origin'}_{len(train_loaders)}_{args.batch_size}"))
+        logger_obj = logger.Logger(os.path.join(args.result_root, f"{args.algorithm}_{args.model}_{dataset_config['name']}_{args.defender if args.defender is not None else 'Origin'}_{len(train_loaders)}_{args.batch_size}"))
 
     logger_obj.create_log("params.json").write_json(vars(args))
 

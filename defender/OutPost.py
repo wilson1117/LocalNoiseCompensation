@@ -13,7 +13,7 @@ class OutPost(Defender):
         self.prune_base = args.prune_base
         self.beta = args.beta
 
-    def local_gradient_defense(self, grad, model, epoch, batch, prev_info=None):
+    def local_gradient_defense(self, grad, model, round, epoch, batch, prev_info=None):
         iteration = epoch * (batch + 1)
         # Probability decay
         if random.random() < 1 / (1 + self.beta * iteration):
@@ -27,7 +27,7 @@ class OutPost(Defender):
 
         return grad, prev_info
     
-    def share_gradient_defense(self, grad, model, prev_info=None):
+    def share_gradient_defense(self, grad, model, round, prev_info=None):
         risk = self.compute_risk(model)
         grad = self.noise(grad, risk)
 

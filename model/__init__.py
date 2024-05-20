@@ -2,7 +2,6 @@ from .lenet import LeNet
 from .ConvNet import ConvNet
 from .CNN import CNN
 from .resnet import *
-from .modules import PatchedModule
 from torchvision import models as torch_models
 from torch import nn
 import re

@@ -53,7 +53,7 @@ class FedAvg(Aggregator):
                 self.noise_metric.reset()
 
             for idx, client in enumerate(tqdm(random.sample(clients, random_select))):
-                share_states[idx] = client.train(origin_state, self.local_epoch, self.device)
+                share_states[idx] = client.train(origin_state, self.local_epoch, r, self.device)
 
                 torch.cuda.empty_cache()
 
@@ -96,12 +96,10 @@ class Client:
 
         self.prev_info = None
 
-    def train(self, origin_state, epochs, device, output_weights=False, create_graph=False):
+    def train(self, origin_state, epochs, round, device, output_weights=False, create_graph=False):
         self.model = self.model.to(device)
         self.model.train()
         self.model.load_state_dict(origin_state)
-
-        
 
         for epoch in range(epochs):
             for batch, (feature, labels) in enumerate(self.dataloader):
@@ -116,7 +114,7 @@ class Client:
                 grad = list(torch.autograd.grad(loss, self.model.parameters(), create_graph=create_graph))
                 
                 if self.defender is not None:
-                    grad, self.prev_info = self.defender.local_gradient_defense(grad, self.model, epoch, batch, prev_info=self.prev_info)
+                    grad, self.prev_info = self.defender.local_gradient_defense(grad, self.model, round, epoch, batch, prev_info=self.prev_info)
                     
                 for g, param in zip(grad, self.model.parameters()):
                     param.grad = g
@@ -128,11 +126,12 @@ class Client:
         result_state = self.model.state_dict()
 
         if self.defender is not None:
-            result_state, self.prev_info = self.defender.share_weight_defense(origin_state, result_state, self.model, self.num_dataset, prev_info=self.prev_info)
+            result_state, self.prev_info = self.defender.share_weight_defense(origin_state, result_state, self.model, round, self.num_dataset, prev_info=self.prev_info)
         
         self.model = self.model.cpu()
         
         if output_weights:
+            self.model.load_state_dict(result_state)
             return self.model.parameters(), len(self.dataloader.dataset)
 
         return result_state, len(self.dataloader.dataset)

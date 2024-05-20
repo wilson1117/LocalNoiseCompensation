@@ -12,16 +12,16 @@ class Defender(ABC):
 
 
     # For share weight
-    def local_gradient_defense(self, grad, model, epoch, batch, prev_info=None):
+    def local_gradient_defense(self, grad, model, round, epoch, batch, prev_info=None):
         return grad, prev_info
 
-    def share_weight_defense(self, origin_state, state, model, num_sample, prev_info=None):
+    def share_weight_defense(self, origin_state, state, model, round, num_sample, prev_info=None):
         return state, prev_info
 
 
     # For share gradient
-    def share_gradient_defense(self, grad, model, prev_info=None):
+    def share_gradient_defense(self, grad, model, round, prev_info=None):
         pass
 
-    def attack_simulation(self, grad):
+    def attack_process(self, grad):
         return grad
