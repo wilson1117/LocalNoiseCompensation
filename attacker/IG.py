@@ -7,7 +7,7 @@ class IG(Attacker):
         self.init = 'randn'
         self.attack_optim = 'Adam'
         self.attack_lr = 0.1
-        self.attack_steps = 5000
+        self.attack_steps = 3000
         self.attack_dist = 'sim'
         self.tv = 1e-4
 

@@ -16,6 +16,7 @@ class ANP(Defender):
         # sigma = math.sqrt(2 * math.log(1.25 / self.delta)) * (2 * min(max_param, self.clip) * 0.01 / num_sample) / self.epsilon
         # sigma /= 100
         sigma = 0.003
+        # sigma = 0.01
         # print(sigma)
 
         for param in model.parameters():
@@ -72,3 +73,12 @@ class ANP(Defender):
         #         param.data = param_sorted[I].view(param.size())
 
         return model.state_dict(), None
+    
+    def attack_weight_process(self, weight):
+        if self.clip:
+            for idx, g in enumerate(weight):
+                norm = g.norm(2).item() / self.clip
+                if norm > 1:
+                    weight[idx] /= norm
+        
+        return weight

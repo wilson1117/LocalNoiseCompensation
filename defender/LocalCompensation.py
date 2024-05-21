@@ -52,7 +52,7 @@ class LocalCompensation(Defender):
 
         return grad, next_info
     
-    def attack_process(self, grad):
+    def attack_grad_process(self, grad):
         if self.clip:
             for idx, g in enumerate(grad):
                 norm = g.norm(2).item() / self.clip

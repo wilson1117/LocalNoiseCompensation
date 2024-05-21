@@ -23,5 +23,8 @@ class Defender(ABC):
     def share_gradient_defense(self, grad, model, round, prev_info=None):
         pass
 
-    def attack_process(self, grad):
+    def attack_grad_process(self, grad):
         return grad
+    
+    def attack_weight_process(self, weight):
+        return weight

@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
     # Load Model
     if dataset_config['type'] == 'classification':
-        model = get_classification_model(args.model, dataset_config['num_classes'], dataset_config['label_type'], dataset_config['input_shape'], dataset_config['grayscale'])
+        model = get_classification_model(args.model, dataset_config['num_classes'], dataset_config['label_type'], dataset_config['input_shape'], dataset_config['grayscale'], attack_test=True)
     else:
         raise ValueError(f"Unsupported dataset type: {dataset_config['type']}")
     

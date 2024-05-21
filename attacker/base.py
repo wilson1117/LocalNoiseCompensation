@@ -44,7 +44,7 @@ class Attacker(ABC):
 
         if self.calc_delta:
             origin_weight = [w.to(self.device) for w in self.model.parameters()]
-            target_delta = [t_weight - o_weight for o_weight, t_weight in zip(origin_weight, target_weight)]
+            target_delta = [((t_weight - o_weight) / self.lr).detach() for o_weight, t_weight in zip(origin_weight, target_weight)]
         else:
             origin_weight = None
             target_delta = None
@@ -90,16 +90,16 @@ class Attacker(ABC):
                 else:
                     loss = self.loss_fn(outputs, dummy_label[idx * self.batch_size : (idx + 1) * self.batch_size])
 
-                grad = torch.autograd.grad(
+                grad = list(torch.autograd.grad(
                     loss,
                     patched_model.parameters.values(),
                     retain_graph=True,
                     create_graph=True,
                     only_inputs=True,
-                )
+                ))
 
                 if self.defender is not None:
-                    grad = self.defender.attack_process(grad)
+                    grad = self.defender.attack_grad_process(grad)
 
                 patched_model.parameters = OrderedDict(
                     (name, param - self.lr * grad_part)
@@ -107,11 +107,14 @@ class Attacker(ABC):
                         patched_model.parameters.items(), grad
                     )
                 )
+
+            if self.defender is not None:
+                patched_model.parameters = self.defender.attack_weight_process(patched_model.parameters)
         
         dummy_weight = patched_model.parameters.values()
 
         if self.calc_delta:
-            dummy_delta = [d_weight - o_weight for o_weight, d_weight in zip(origin_weight, dummy_weight)]
+            dummy_delta = [(d_weight - o_weight) / self.lr for o_weight, d_weight in zip(origin_weight, dummy_weight)]
             rec_loss = self.calc_dist(target_delta, dummy_delta) + self.auxiliary_loss(dummy_feature, dummy_label)
         else:
             rec_loss = self.calc_dist(target_weight, dummy_weight) + self.auxiliary_loss(dummy_feature, dummy_label)
